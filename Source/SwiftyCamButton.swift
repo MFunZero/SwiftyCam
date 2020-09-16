@@ -58,9 +58,38 @@ open class SwiftyCamButton: UIButton {
     
     public var buttonEnabled = true
     
+    /// EventMode variable
+    
+    public var eventMode : EventMode = .normal
+    
     /// Maximum duration variable
     
     fileprivate var timer : Timer?
+    
+    /// EventMode enum
+    
+    public enum EventMode{
+        //Return the equivalent AVCaptureDevice.FlashMode
+        var eventMode: EventMode {
+            switch self {
+                case .normal:
+                    return .normal
+                case .custom:
+                    return .custom
+                case .other:
+                    return .other
+            }
+        }
+        // takePhoto takeVideo
+        case normal
+        
+        //Only takeVideo
+        case custom
+        
+        // IF
+        case other
+    }
+
     
     /// Initialization Declaration
     
@@ -80,28 +109,45 @@ open class SwiftyCamButton: UIButton {
     /// UITapGestureRecognizer Function
     
     @objc fileprivate func Tap() {
-        guard buttonEnabled == true else {
-            return
+        switch eventMode {
+        case .custom:
+            isSelected = !isSelected
+            if isSelected {
+                delegate?.buttonDidBeginLongPress()
+                startTimer()
+            } else {
+                invalidateTimer()
+                delegate?.buttonDidEndLongPress()
+            }
+        default:
+            guard buttonEnabled == true else {
+                 return
+             }
+             
+            delegate?.buttonWasTapped()
         }
-        
-       delegate?.buttonWasTapped()
     }
     
     /// UILongPressGestureRecognizer Function
     @objc fileprivate func LongPress(_ sender:UILongPressGestureRecognizer!)  {
-        guard buttonEnabled == true else {
-            return
-        }
-        
-        switch sender.state {
-        case .began:
-            delegate?.buttonDidBeginLongPress()
-            startTimer()
-        case .cancelled, .ended, .failed:
-            invalidateTimer()
-            delegate?.buttonDidEndLongPress()
+        switch eventMode {
+        case .custom:
+            ()
         default:
-            break
+            guard buttonEnabled == true else {
+                return
+            }
+            
+            switch sender.state {
+            case .began:
+                delegate?.buttonDidBeginLongPress()
+                startTimer()
+            case .cancelled, .ended, .failed:
+                invalidateTimer()
+                delegate?.buttonDidEndLongPress()
+            default:
+                break
+            }
         }
     }
     
